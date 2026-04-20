@@ -207,6 +207,19 @@ const INTERIOR_OBJECTS: InteractiveObject[] = [
   }
 ];
 
+const DESKTOP_APPS = [
+  { id: 'pc', name: 'Mi PC', type: 'pc', x: 20, y: 20 },
+  { id: 'trash', name: 'Papelera', type: 'trash', x: 20, y: 100 },
+  { id: 'penalties', name: 'Penaltis', type: 'net', x: 20, y: 180 },
+  { id: 'cv', name: 'Mi CV', type: 'cv', x: 100, y: 20 },
+  { id: 'logulia', name: 'Logulia', type: 'net', x: 100, y: 100 },
+  { id: 'readme_log', name: 'Leeme', type: 'text', x: 180, y: 100 },
+  { id: 'zaprado', name: 'Zaprado', type: 'net', x: 100, y: 180 },
+  { id: 'readme_zap', name: 'Leeme', type: 'text', x: 180, y: 180 },
+  { id: 'gestor', name: 'Gestor.Inc', type: 'net', x: 100, y: 260 },
+  { id: 'readme_gest', name: 'Leeme', type: 'text', x: 180, y: 260 }
+];
+
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -224,6 +237,7 @@ export default function App() {
   const [dismissedRotate, setDismissedRotate] = useState(false);
   const [interactedIds, setInteractedIds] = useState<string[]>([]);
 
+  const lastMapChange = useRef(0);
   const mousePos = useRef<Vector2>({ x: 0, y: 0 });
   const osStateRef = useRef({ startMenuOpen: false });
 
@@ -293,11 +307,16 @@ export default function App() {
 
         // Check if there is an interaction target nearby
         if (interactionTarget) {
+          if (interactionTarget.type === 'door' && Date.now() - lastMapChange.current < 800) {
+             return; // Cooldown to prevent looping doors on mobile
+          }
+
           if (!stateRef.current.interactedIds.includes(interactionTarget.id)) {
              setInteractedIds(prev => [...prev, interactionTarget.id]);
           }
           if (interactionTarget.type === 'door' && interactionTarget.targetMap) {
             const nextMap = interactionTarget.targetMap;
+            lastMapChange.current = Date.now();
             setCurrentMap(nextMap);
             // reset position when map changes based on which room
             if (nextMap === 'INTERIOR') {
@@ -949,7 +968,7 @@ export default function App() {
         // Selection box
         if (isHovered) {
            ctx.fillStyle = 'rgba(0, 0, 128, 0.5)';
-           ctx.fillRect(x - 5, y - 5, 50, 60);
+           ctx.fillRect(x - 5, y - 5, 55, 65);
         }
         
         ctx.fillStyle = '#C0C0C0';
@@ -1021,27 +1040,18 @@ export default function App() {
         ctx.textAlign = 'start';
       };
 
-      // Define icon grid
-      const apps = [
-        { id: 'pc', name: 'Mi PC', type: 'pc', x: 20, y: 20 },
-        { id: 'trash', name: 'Papelera', type: 'trash', x: 20, y: 100 },
-        { id: 'penalties', name: 'Penaltis', type: 'net', x: 20, y: 180 },
-        { id: 'cv', name: 'Mi CV', type: 'cv', x: 100, y: 20 },
-        { id: 'logulia', name: 'Logulia', type: 'net', x: 100, y: 100 },
-        { id: 'readme_log', name: 'Leeme', type: 'text', x: 180, y: 100 },
-        { id: 'zaprado', name: 'Zaprado', type: 'net', x: 100, y: 180 },
-        { id: 'readme_zap', name: 'Leeme', type: 'text', x: 180, y: 180 },
-        { id: 'gestor', name: 'Gestor.Inc', type: 'net', x: 100, y: 260 },
-        { id: 'readme_gest', name: 'Leeme', type: 'text', x: 180, y: 260 }
-      ];
-
-      // Draw active window if project is opened
+      // Draw icon grid
       let windowHover = false;
       
-      apps.forEach(app => {
-         const isHovered = mx >= app.x - 5 && mx <= app.x + 45 && my >= app.y - 5 && my <= app.y + 55;
-         if (isHovered) hoverCursor = true;
-         drawIcon(app.x, app.y, app.name, app.type, isHovered);
+      DESKTOP_APPS.forEach(app => {
+         // Generous hitbox for better interaction (approx 65x75 area)
+         const isHovered = mx >= app.x - 10 && mx <= app.x + 55 && my >= app.y - 10 && my <= app.y + 70;
+         if (isHovered) {
+            hoverCursor = true;
+            drawIcon(app.x, app.y, app.name, app.type, true);
+         } else {
+            drawIcon(app.x, app.y, app.name, app.type, false);
+         }
       });
 
       // --- Taskbar ---
@@ -1054,7 +1064,7 @@ export default function App() {
       ctx.fillRect(0, tbY, ROOM_WIDTH, 2);
 
       // Start Button
-      const btnHover = mx >= 4 && mx <= 76 && my >= tbY + 4 && my <= tbY + 31;
+      const btnHover = mx >= 0 && mx <= 80 && my >= tbY;
       if (btnHover) hoverCursor = true;
       const btnActive = osStateRef.current.startMenuOpen;
 
@@ -1236,7 +1246,7 @@ export default function App() {
     
     // Check Taskbar Start Button First
     const tbY = ROOM_HEIGHT - 35;
-    if (mx >= 4 && mx <= 76 && my >= tbY + 4 && my <= tbY + 31) {
+    if (mx >= 0 && mx <= 80 && my >= tbY) {
        osStateRef.current.startMenuOpen = !osStateRef.current.startMenuOpen;
        return;
     }
@@ -1264,19 +1274,8 @@ export default function App() {
     }
 
     // Check App Icons
-    const apps = [
-      { id: 'penalties', x: 20, y: 180 },
-      { id: 'cv', x: 100, y: 20 },
-      { id: 'logulia', x: 100, y: 100 },
-      { id: 'readme_log', x: 180, y: 100 },
-      { id: 'zaprado', x: 100, y: 180 },
-      { id: 'readme_zap', x: 180, y: 180 },
-      { id: 'gestor', x: 100, y: 260 },
-      { id: 'readme_gest', x: 180, y: 260 }
-    ];
-
-    for (const app of apps) {
-       if (mx >= app.x - 5 && mx <= app.x + 45 && my >= app.y - 5 && my <= app.y + 55) {
+    for (const app of DESKTOP_APPS) {
+       if (mx >= app.x - 10 && mx <= app.x + 55 && my >= app.y - 10 && my <= app.y + 70) {
           if (['penalties', 'cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'gestor', 'readme_gest'].includes(app.id)) {
              setOpenedApp(app.id);
              setIsMaximized(false); 
@@ -1303,7 +1302,7 @@ export default function App() {
     <div className="bg-[#1A1A1A] min-h-[100dvh] flex flex-col items-center justify-center font-mono text-white overflow-hidden p-0 lg:p-8 select-none">
       
       {/* Game Viewport Container */}
-      <div className="relative border-y-[6px] lg:border-[6px] border-[#303030] bg-[#1e1e1e] shadow-[0_0_60px_rgba(0,0,0,0.8)] lg:rounded-sm w-full max-w-[800px] aspect-[4/3] flex-shrink-0">
+      <div className="relative border-y-[6px] lg:border-[6px] border-[#303030] bg-[#1e1e1e] shadow-[0_0_60px_rgba(0,0,0,0.8)] lg:rounded-sm w-full max-w-[800px] aspect-video flex-shrink-0">
         
         {/* Windows 95 Emulated Application Window Overlay */}
         {openedApp && ['cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'penalties', 'gestor', 'readme_gest'].includes(openedApp) && (
@@ -1389,7 +1388,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute bottom-1/2 left-1/2 -translate-x-1/2 translate-y-10 bg-white text-black px-6 py-2 font-bold text-sm border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-bounce z-20 whitespace-nowrap"
+              className="absolute bottom-1/2 left-1/2 -translate-x-1/2 -translate-y-12 lg:translate-y-10 bg-white text-black px-6 py-2 font-bold text-sm border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-bounce z-20 whitespace-nowrap"
               style={{ fontFamily: '"Arial Black", sans-serif' }}
             >
               [E] {interactionTarget.type === 'door' ? 'ABRIR' : 'INTERACTUAR'}
@@ -1430,9 +1429,9 @@ export default function App() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-4 left-4 right-4 border-[6px] border-[#303030] bg-[#F8F8F8] p-6 h-32 rounded-lg shadow-xl z-40"
+              className="absolute bottom-1/2 translate-y-24 lg:bottom-4 left-4 right-4 border-[6px] border-[#303030] bg-[#F8F8F8] p-6 h-32 rounded-lg shadow-xl z-40"
             >
-              <div className="text-[#303030] text-xl leading-relaxed flex flex-col h-full justify-between">
+              <div className="text-[#303030] text-lg sm:text-xl leading-relaxed flex flex-col h-full justify-between">
                 <p>{activeDialog.obj.pages && activeDialog.obj.pages[activeDialog.page]}</p>
                 <div className="flex justify-end items-center gap-2 text-xs font-bold text-gray-400">
                   <span>Página {activeDialog.page + 1}/{activeDialog.obj.pages?.length}</span>
