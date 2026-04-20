@@ -1,0 +1,5 @@
+Para que tu foto se vea en la televisión, debes subir tu imagen aquí.
+
+1. Asegúrate de que tu foto se llame EXACTAMENTE: foto_alvaro.jpg
+2. Utiliza el explorador de archivos de la parte izquierda para subir el archivo DENTRO de esta carpeta "public".
+3. En cuanto subas la imagen, la aplicación la usará automáticamente y se mostrará en la TV en lugar de la imagen por defecto.
