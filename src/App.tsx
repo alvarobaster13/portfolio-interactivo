@@ -1267,11 +1267,11 @@ export default function App() {
     <div className="bg-[#1A1A1A] min-h-screen flex flex-col items-center justify-center font-mono text-white overflow-hidden p-8 select-none">
       
       {/* Game Viewport Container */}
-      <div className="relative border-[6px] border-[#303030] bg-[#1e1e1e] shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-sm">
+      <div className="relative border-[6px] border-[#303030] bg-[#1e1e1e] shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-sm w-full max-w-[800px] aspect-[4/3] flex-shrink-0">
         
         {/* Windows 95 Emulated Application Window Overlay */}
         {openedApp && ['cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'penalties', 'gestor', 'readme_gest'].includes(openedApp) && (
-          <div className={`absolute ${isMaximized ? 'top-0 left-0 right-0 bottom-[35px]' : 'top-[30px] left-[60px] w-[680px] h-[500px]'} bg-[#C0C0C0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-[#000] flex flex-col z-50 shadow-[4px_4px_0_rgba(0,0,0,0.5)]`}>
+          <div className={`absolute ${isMaximized ? 'inset-0 mb-[35px]' : 'top-[5%] left-[5%] right-[5%] bottom-[10%]'} bg-[#C0C0C0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-[#000] flex flex-col z-50 shadow-[4px_4px_0_rgba(0,0,0,0.5)]`}>
              <div className="bg-[#000080] text-white flex justify-between p-1 items-center font-sans">
                 <div className="flex items-center gap-2 ml-1">
                    {/* Tiny mockup icon */}
@@ -1340,7 +1340,7 @@ export default function App() {
           ref={canvasRef}
           width={ROOM_WIDTH}
           height={ROOM_HEIGHT}
-          className="block cursor-crosshair"
+          className="w-full h-full object-contain block cursor-crosshair"
           id="game-canvas"
           onMouseMove={handleMouseMove}
           onClick={handleCanvasClick}
@@ -1425,63 +1425,71 @@ export default function App() {
         </div>
       </div>
 
-      {/* Controls Legend / Mobile Touch Controls */}
-      <div className="mt-4 xl:mt-12 w-full px-2 flex justify-between items-center lg:justify-center lg:bg-black/20 lg:px-8 py-3 lg:rounded-full lg:border border-white/5 relative z-50">
-        
+      {/* Desktop Controls Legend */}
+      <div className="hidden lg:flex mt-12 gap-12 text-[#999] text-[10px] tracking-widest bg-black/20 px-8 py-3 rounded-full border border-white/5 relative z-50">
+          <div className="flex items-center gap-2">
+            <span className="bg-[#444] px-2 py-1 rounded text-white font-bold">WASD / ARROWS</span>
+            <span>MOVEMENT</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-[#444] px-2 py-1 rounded text-white font-bold">E / SPACE</span>
+            <span>INTERACT / NEXT</span>
+          </div>
+      </div>
+
+      {/* Mobile Touch Controls - FIXED OVERLAYS */}
+      <div className="lg:hidden absolute inset-0 pointer-events-none z-[100] flex justify-between items-end pb-8 px-4 sm:px-12">
         {/* Mobile Left D-Pad */}
-        <div className="flex flex-col items-center gap-1 lg:hidden ml-2">
+        <div className="flex flex-col items-center gap-1 pointer-events-auto">
             <button 
-              className="w-14 h-14 bg-[#333] rounded-lg border-b-4 border-[#111] active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center opacity-80"
+              className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-lg border-b-4 border-black/40 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
               onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowup'] = true; }}
               onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowup'] = false; }}
+              onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowup'] = true; }}
+              onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowup'] = false; }}
             >▲</button>
             <div className="flex gap-1">
               <button 
-                className="w-14 h-14 bg-[#333] rounded-lg border-b-4 border-[#111] active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center opacity-80"
+                className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-lg border-b-4 border-black/40 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
                 onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = true; }}
                 onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = false; }}
+                onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = true; }}
+                onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = false; }}
               >◀</button>
               <button 
-                className="w-14 h-14 bg-[#333] rounded-lg border-b-4 border-[#111] active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center opacity-80"
+                className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-lg border-b-4 border-black/40 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
                 onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = true; }}
                 onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = false; }}
+                onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = true; }}
+                onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = false; }}
               >▼</button>
               <button 
-                className="w-14 h-14 bg-[#333] rounded-lg border-b-4 border-[#111] active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center opacity-80"
+                className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-lg border-b-4 border-black/40 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
                 onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowright'] = true; }}
                 onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowright'] = false; }}
+                onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowright'] = true; }}
+                onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowright'] = false; }}
               >▶</button>
             </div>
         </div>
 
-        {/* Desktop Controls Legend */}
-        <div className="hidden lg:flex gap-12 text-[#999] text-[10px] tracking-widest max-w-[800px]">
-            <div className="flex items-center gap-2">
-              <span className="bg-[#444] px-2 py-1 rounded text-white font-bold">WASD / ARROWS</span>
-              <span>MOVEMENT</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#444] px-2 py-1 rounded text-white font-bold">E</span>
-              <span>INTERACT / NEXT</span>
-            </div>
-        </div>
-
         {/* Mobile Right Action Buttons */}
-        <div className="flex gap-4 lg:hidden mr-2 items-end pb-2">
+        <div className="flex gap-4 items-end pointer-events-auto">
             <button 
-              className="w-14 h-14 bg-red-700 rounded-full border-b-4 border-red-900 active:border-b-0 active:translate-y-1 text-white font-bold tracking-widest shadow-lg opacity-80"
-              onTouchStart={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); }}
+              className="w-14 h-14 bg-red-600/60 backdrop-blur-md rounded-full border-b-4 border-red-900/60 active:border-b-0 active:translate-y-1 text-white font-bold text-xs tracking-widest shadow-lg select-none flex items-center justify-center"
+              onTouchStart={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape' })); }}
+              onMouseDown={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape' })); }}
             >
               ESC
             </button>
             <button 
-              className="w-16 h-16 bg-blue-600 rounded-full border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 text-white font-bold text-2xl shadow-lg mb-4 opacity-80"
-              onTouchStart={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' })); }}
+              className="w-16 h-16 bg-blue-500/60 backdrop-blur-md rounded-full border-b-4 border-blue-900/60 active:border-b-0 active:translate-y-1 text-white font-bold text-2xl shadow-lg mb-4 select-none flex items-center justify-center"
+              onTouchStart={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', key: 'e' })); }}
+              onMouseDown={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', key: 'e' })); }}
             >
               E
             </button>
         </div>
-
       </div>
 
     </div>
