@@ -244,11 +244,93 @@ export default function App() {
   // References for render loop (avoids stale closures)
   const playerPos = useRef<Vector2>({ x: ROOM_WIDTH / 2, y: ROOM_HEIGHT - 60 });
   const playerDir = useRef<Direction>('up');
-  const stateRef = useRef({ currentMap, activeDialog, activeDocument, isViewingPC, openedApp, interactedIds });
+  const stateRef = useRef({ currentMap, activeDialog, activeDocument, isViewingPC, openedApp, interactedIds, interactionTarget });
 
   useEffect(() => {
-    stateRef.current = { currentMap, activeDialog, activeDocument, isViewingPC, openedApp, interactedIds };
-  }, [currentMap, activeDialog, activeDocument, isViewingPC, openedApp, interactedIds]);
+    stateRef.current = { currentMap, activeDialog, activeDocument, isViewingPC, openedApp, interactedIds, interactionTarget };
+  }, [currentMap, activeDialog, activeDocument, isViewingPC, openedApp, interactedIds, interactionTarget]);
+
+  const lastActionTime = useRef(0);
+  const handleActionKey = (key: string) => {
+    // Cooldown to prevent double-triggering (especially on mobile buttons)
+    const now = Date.now();
+    if (now - lastActionTime.current < 150) return;
+    lastActionTime.current = now;
+
+    const { currentMap: map, activeDialog: dialog, activeDocument: doc, isViewingPC: pc, openedApp: app, interactionTarget: target } = stateRef.current;
+    
+    // Handle escape key globally
+    if (key === 'escape') {
+       if (app) {
+          setOpenedApp(null);
+          setIsMaximized(false);
+       }
+       else if (doc) setActiveDocument(null);
+       else if (pc) setIsViewingPC(false);
+       return;
+    }
+
+    // Trigger interaction logic strictly on 'KeyE' press
+    if (key === 'keye') {
+      // If PC open, exit
+      if (pc) {
+        setIsViewingPC(false);
+        return;
+      }
+
+      // If Document open, close it
+      if (doc) {
+        setActiveDocument(null);
+        return;
+      }
+
+      // If Dialog open, turn page or close
+      if (dialog) {
+        const nextPage = dialog.page + 1;
+        if (dialog.obj.pages && nextPage < dialog.obj.pages.length) {
+           setActiveDialog({ obj: dialog.obj, page: nextPage });
+        } else {
+           // Close Dialog
+           setActiveDialog(null);
+           // If this dialog object also has docContent (like the fridge), open it immediately
+           if (dialog.obj.docContent) {
+              setActiveDocument(dialog.obj);
+           }
+        }
+        return;
+      }
+
+      // Check if there is an interaction target nearby
+      if (target) {
+        if (target.type === 'door' && Date.now() - lastMapChange.current < 800) {
+           return; // Cooldown to prevent looping doors on mobile
+        }
+
+        if (!stateRef.current.interactedIds.includes(target.id)) {
+           setInteractedIds(prev => [...prev, target.id]);
+        }
+        if (target.type === 'door' && target.targetMap) {
+          const nextMap = target.targetMap;
+          lastMapChange.current = Date.now();
+          setCurrentMap(nextMap);
+          // reset position when map changes based on which room
+          if (nextMap === 'INTERIOR') {
+             playerPos.current = { x: ROOM_WIDTH / 2 - 16, y: ROOM_HEIGHT - 80 };
+             playerDir.current = 'up';
+          } else {
+             playerPos.current = { x: ROOM_WIDTH / 2 - 16, y: ROOM_HEIGHT / 2 + 10 };
+             playerDir.current = 'down';
+          }
+        } else if (target.type === 'document') {
+          setActiveDocument(target);
+        } else if (target.type === 'dialog' && target.pages) {
+          setActiveDialog({ obj: target, page: 0 });
+        } else if (target.type === 'pc') {
+          setIsViewingPC(true);
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -261,80 +343,7 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.code.toLowerCase();
       keysRef.current[key] = true;
-      
-      const { currentMap: map, activeDialog: dialog, activeDocument: doc, isViewingPC: pc, openedApp: app } = stateRef.current;
-      
-      // Handle escape key globally
-      if (key === 'escape') {
-         if (app) {
-            setOpenedApp(null);
-            setIsMaximized(false);
-         }
-         else if (doc) setActiveDocument(null);
-         else if (pc) setIsViewingPC(false);
-         return;
-      }
-
-      // Trigger interaction logic strictly on 'KeyE' press
-      if (key === 'keye') {
-        // If PC open, exit
-        if (pc) {
-          setIsViewingPC(false);
-          return;
-        }
-
-        // If Document open, close it
-        if (doc) {
-          setActiveDocument(null);
-          return;
-        }
-
-        // If Dialog open, turn page or close
-        if (dialog) {
-          const nextPage = dialog.page + 1;
-          if (dialog.obj.pages && nextPage < dialog.obj.pages.length) {
-             setActiveDialog({ obj: dialog.obj, page: nextPage });
-          } else {
-             // Close Dialog
-             setActiveDialog(null);
-             // If this dialog object also has docContent (like the fridge), open it immediately
-             if (dialog.obj.docContent) {
-                setActiveDocument(dialog.obj);
-             }
-          }
-          return;
-        }
-
-        // Check if there is an interaction target nearby
-        if (interactionTarget) {
-          if (interactionTarget.type === 'door' && Date.now() - lastMapChange.current < 800) {
-             return; // Cooldown to prevent looping doors on mobile
-          }
-
-          if (!stateRef.current.interactedIds.includes(interactionTarget.id)) {
-             setInteractedIds(prev => [...prev, interactionTarget.id]);
-          }
-          if (interactionTarget.type === 'door' && interactionTarget.targetMap) {
-            const nextMap = interactionTarget.targetMap;
-            lastMapChange.current = Date.now();
-            setCurrentMap(nextMap);
-            // reset position when map changes based on which room
-            if (nextMap === 'INTERIOR') {
-               playerPos.current = { x: ROOM_WIDTH / 2 - 16, y: ROOM_HEIGHT - 80 };
-               playerDir.current = 'up';
-            } else {
-               playerPos.current = { x: ROOM_WIDTH / 2 - 16, y: ROOM_HEIGHT / 2 + 10 };
-               playerDir.current = 'down';
-            }
-          } else if (interactionTarget.type === 'document') {
-            setActiveDocument(interactionTarget);
-          } else if (interactionTarget.type === 'dialog' && interactionTarget.pages) {
-            setActiveDialog({ obj: interactionTarget, page: 0 });
-          } else if (interactionTarget.type === 'pc') {
-            setIsViewingPC(true);
-          }
-        }
-      }
+      handleActionKey(key);
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -1446,59 +1455,61 @@ export default function App() {
           )}
         </AnimatePresence>
         {/* Mobile Touch Controls - FIXED OVERLAYS (Inside Game Container) */}
-        <div className="lg:hidden absolute inset-0 pointer-events-none z-[100] flex justify-between items-end pb-4 px-4 sm:px-8">
-          {/* Mobile Left D-Pad */}
-          <div className="flex flex-col items-center gap-1 pointer-events-auto">
-              <button 
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-sm rounded-lg border-b-2 border-black/30 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
-                onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowup'] = true; }}
-                onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowup'] = false; }}
-                onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowup'] = true; }}
-                onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowup'] = false; }}
-              >▲</button>
-              <div className="flex gap-1">
-                <button 
-                  className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-sm rounded-lg border-b-2 border-black/30 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
-                  onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = true; }}
-                  onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = false; }}
-                  onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = true; }}
-                  onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = false; }}
-                >◀</button>
-                <button 
-                  className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-sm rounded-lg border-b-2 border-black/30 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
-                  onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = true; }}
-                  onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = false; }}
-                  onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = true; }}
-                  onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = false; }}
-                >▼</button>
-                <button 
-                  className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-sm rounded-lg border-b-2 border-black/30 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
-                  onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowright'] = true; }}
-                  onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowright'] = false; }}
-                  onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowright'] = true; }}
-                  onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowright'] = false; }}
-                >▶</button>
+        {!isViewingPC && (
+          <div className="lg:hidden absolute inset-0 pointer-events-none z-[100] flex justify-between items-end pb-4 px-4 sm:px-8">
+            {/* Mobile Left D-Pad - Hidden while interacting/dialogue */}
+            {!activeDialog && !activeDocument && (
+              <div className="flex flex-col items-center gap-1 pointer-events-auto">
+                  <button 
+                    className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-sm rounded-lg border-b-2 border-black/30 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
+                    onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowup'] = true; }}
+                    onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowup'] = false; }}
+                    onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowup'] = true; }}
+                    onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowup'] = false; }}
+                  >▲</button>
+                  <div className="flex gap-1">
+                    <button 
+                      className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-sm rounded-lg border-b-2 border-black/30 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
+                      onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = true; }}
+                      onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = false; }}
+                      onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = true; }}
+                      onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowleft'] = false; }}
+                    >◀</button>
+                    <button 
+                      className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-sm rounded-lg border-b-2 border-black/30 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
+                      onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = true; }}
+                      onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = false; }}
+                      onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = true; }}
+                      onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowdown'] = false; }}
+                    >▼</button>
+                    <button 
+                      className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-sm rounded-lg border-b-2 border-black/30 active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center select-none"
+                      onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowright'] = true; }}
+                      onTouchEnd={(e) => { e.preventDefault(); keysRef.current['arrowright'] = false; }}
+                      onMouseDown={(e) => { e.preventDefault(); keysRef.current['arrowright'] = true; }}
+                      onMouseUp={(e) => { e.preventDefault(); keysRef.current['arrowright'] = false; }}
+                    >▶</button>
+                  </div>
               </div>
-          </div>
+            )}
 
-          {/* Mobile Right Action Buttons */}
-          <div className="flex gap-2 sm:gap-4 items-end pointer-events-auto">
-              <button 
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-red-600/50 backdrop-blur-sm rounded-full border-b-2 border-red-900/50 active:border-b-0 active:translate-y-1 text-white font-bold text-[10px] sm:text-xs tracking-widest shadow-lg select-none flex items-center justify-center"
-                onTouchStart={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape' })); }}
-                onMouseDown={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape' })); }}
-              >
-                ESC
-              </button>
-              <button 
-                className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/50 backdrop-blur-sm rounded-full border-b-2 border-blue-900/50 active:border-b-0 active:translate-y-1 text-white font-bold text-xl sm:text-2xl shadow-lg mb-2 select-none flex items-center justify-center"
-                onTouchStart={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', key: 'e' })); }}
-                onMouseDown={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', key: 'e' })); }}
-              >
-                E
-              </button>
+            {/* Mobile Right Action Buttons */}
+            <div className="flex gap-2 sm:gap-4 items-end pointer-events-auto ml-auto">
+                <button 
+                  className="w-12 h-12 sm:w-14 sm:h-14 bg-red-600/50 backdrop-blur-sm rounded-full border-b-2 border-red-900/50 active:border-b-0 active:translate-y-1 text-white font-bold text-[10px] sm:text-xs tracking-widest shadow-lg select-none flex items-center justify-center"
+                  onPointerDown={(e) => { e.preventDefault(); handleActionKey('escape'); }}
+                >
+                  ESC
+                </button>
+                <button 
+                  className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/50 backdrop-blur-sm rounded-full border-b-2 border-blue-900/50 active:border-b-0 active:translate-y-1 text-white font-bold text-xl sm:text-2xl shadow-lg mb-2 select-none flex items-center justify-center"
+                  onPointerDown={(e) => { e.preventDefault(); handleActionKey('keye'); }}
+                >
+                  E
+                </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <div className="mt-8 flex items-center gap-8 text-[#555] opacity-50 hover:opacity-100 transition-opacity hidden lg:flex">
         <div className="flex flex-col items-center">
