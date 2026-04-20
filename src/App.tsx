@@ -143,25 +143,32 @@ const INTERIOR_OBJECTS: InteractiveObject[] = [
     color: '#303030',
     docContent: (
       <div className="flex flex-col items-center h-full text-black justify-center">
-        <div className="relative w-full aspect-video rounded-lg overflow-hidden border-4 border-black shadow-2xl">
-          <img 
-            src={`/foto_alvaro.jpg?t=${Date.now()}`} 
-            alt="Álvaro Fernández" 
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover object-[center_25%]"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://picsum.photos/seed/alvaro_night_sky/800/450";
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
-            <h3 className="text-white text-4xl font-bold tracking-tighter" style={{ fontFamily: 'Inter, sans-serif' }}>ÁLVARO</h3>
-            <p className="text-gray-300 text-xs uppercase tracking-[0.4em] font-medium">Full Stack & AI Specialist</p>
+        <div className="relative w-full rounded-lg overflow-hidden border-4 border-[#0A66C2] shadow-2xl bg-white flex flex-col font-sans">
+          <div className="w-full h-24 bg-gradient-to-tr from-[#004182] to-[#0A66C2] relative flex items-center justify-center overflow-hidden">
+             <div className="absolute opacity-20 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle, white 2px, transparent 2px)', backgroundSize: '15px 15px' }}></div>
+          </div>
+          <div className="px-6 pb-6 relative flex flex-col items-center text-center">
+            <div className="w-24 h-24 bg-white rounded-full border-4 border-white -mt-12 shadow-md flex items-center justify-center overflow-hidden z-10">
+               <span className="text-4xl font-bold text-[#0A66C2] tracking-tighter">ÁF</span>
+            </div>
+            <h3 className="text-2xl font-bold mt-2 text-gray-900" style={{ fontFamily: 'Inter, sans-serif' }}>Álvaro Fernández</h3>
+            <p className="text-sm font-medium text-gray-800 mt-1">Full Stack Developer Junior & AI Specialist</p>
+            <p className="text-xs text-gray-500 mt-1">Villaluenga de la Sagra (España)</p>
+            
+            <a 
+              href="https://www.linkedin.com/in/áfc" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-6 bg-[#0A66C2] text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-[#004182] transition-colors shadow-md w-full max-w-[200px]"
+            >
+              Ver perfil en LinkedIn
+            </a>
           </div>
         </div>
         <div className="mt-6 flex flex-col items-center gap-2">
            <div className="h-px w-12 bg-black/20" />
            <p className="text-center text-sm font-sans italic opacity-60">
-              "Bajo el mismo cielo, escribiendo el futuro una línea de código a la vez."
+              "Bajo el mismo cielo, escribiendo el futuro<br/>una línea de código a la vez."
            </p>
         </div>
       </div>
