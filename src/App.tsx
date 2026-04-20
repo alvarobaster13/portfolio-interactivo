@@ -1413,7 +1413,7 @@ export default function App() {
       </div>
 
       {/* Decorative Branding */}
-      <div className="mt-8 flex items-center gap-8 text-[#555] opacity-50 hover:opacity-100 transition-opacity hidden md:flex">
+      <div className="mt-8 flex items-center gap-8 text-[#555] opacity-50 hover:opacity-100 transition-opacity hidden lg:flex">
         <div className="flex flex-col items-center">
           <span className="text-2xl font-black">INTERACTIVE</span>
           <span className="tracking-[0.4em] text-[10px]">PORTFOLIO ENGINE</span>
@@ -1426,10 +1426,10 @@ export default function App() {
       </div>
 
       {/* Controls Legend / Mobile Touch Controls */}
-      <div className="mt-4 md:mt-12 w-full max-w-[800px] px-2 flex justify-between items-center md:justify-center md:bg-black/20 md:px-8 py-3 md:rounded-full md:border border-white/5 relative z-50">
+      <div className="mt-4 xl:mt-12 w-full px-2 flex justify-between items-center lg:justify-center lg:bg-black/20 lg:px-8 py-3 lg:rounded-full lg:border border-white/5 relative z-50">
         
         {/* Mobile Left D-Pad */}
-        <div className="flex flex-col items-center gap-1 md:hidden ml-2">
+        <div className="flex flex-col items-center gap-1 lg:hidden ml-2">
             <button 
               className="w-14 h-14 bg-[#333] rounded-lg border-b-4 border-[#111] active:border-b-0 active:translate-y-1 text-white text-xl flex items-center justify-center opacity-80"
               onTouchStart={(e) => { e.preventDefault(); keysRef.current['arrowup'] = true; }}
@@ -1455,7 +1455,7 @@ export default function App() {
         </div>
 
         {/* Desktop Controls Legend */}
-        <div className="hidden md:flex gap-12 text-[#999] text-[10px] tracking-widest">
+        <div className="hidden lg:flex gap-12 text-[#999] text-[10px] tracking-widest max-w-[800px]">
             <div className="flex items-center gap-2">
               <span className="bg-[#444] px-2 py-1 rounded text-white font-bold">WASD / ARROWS</span>
               <span>MOVEMENT</span>
@@ -1467,7 +1467,7 @@ export default function App() {
         </div>
 
         {/* Mobile Right Action Buttons */}
-        <div className="flex gap-4 md:hidden mr-2 items-end pb-2">
+        <div className="flex gap-4 lg:hidden mr-2 items-end pb-2">
             <button 
               className="w-14 h-14 bg-red-700 rounded-full border-b-4 border-red-900 active:border-b-0 active:translate-y-1 text-white font-bold tracking-widest shadow-lg opacity-80"
               onTouchStart={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); }}
