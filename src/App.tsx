@@ -204,6 +204,42 @@ const INTERIOR_OBJECTS: InteractiveObject[] = [
         <p className="text-center text-xs text-gray-500 italic mt-4 opacity-70">"Mejor cerrar antes de que se escape el frío."</p>
       </div>
     )
+  },
+  {
+    id: 'mesilla',
+    type: 'dialog',
+    label: 'MESILLA',
+    rect: { x: 500, y: 300, width: 40, height: 50 },
+    color: '#8B4513',
+    pages: [
+      '[TELÉFONO] Tienes una llamada perdida de: "EL FUTURO".',
+      '[TELÉFONO] El mensaje dice: "Sigue construyendo cosas increíbles."'
+    ],
+    docContent: (
+      <div className="space-y-4 font-sans text-[#1a1a1a]">
+        <h2 className="text-3xl font-bold border-b-2 border-slate-300 pb-2">DATOS DE CONTACTO 📞</h2>
+        <div className="grid grid-cols-1 gap-3 text-sm font-bold bg-green-50 p-4 rounded-lg border-2 border-green-200 shadow-inner">
+           <div className="flex items-center gap-3 border-b border-green-100 pb-2">
+              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">TEL</div>
+              <div className="flex flex-col">
+                 <span className="text-[10px] text-green-600 uppercase">Móvil</span>
+                 <span className="text-base font-bold">+34 635 37 96 54</span>
+              </div>
+           </div>
+           <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs">MAIL</div>
+              <div className="flex flex-col">
+                 <span className="text-[10px] text-indigo-600 uppercase">Correo Electrónico</span>
+                 <span className="text-sm md:text-base font-bold">alvaroferndezcerezo13@gmail.com</span>
+              </div>
+           </div>
+        </div>
+        <div className="mt-4 bg-yellow-100 p-3 rounded border border-yellow-300 font-bold text-center text-sm shadow">
+           📍 Villaluenga de la Sagra, Toledo
+        </div>
+        <p className="text-center text-xs text-gray-500 italic mt-4 opacity-70">"Disponible para nuevos desafíos tecnológicos."</p>
+      </div>
+    )
   }
 ];
 
@@ -217,7 +253,9 @@ const DESKTOP_APPS = [
   { id: 'zaprado', name: 'Zaprado', type: 'net', x: 100, y: 180 },
   { id: 'readme_zap', name: 'Leeme', type: 'text', x: 180, y: 180 },
   { id: 'gestor', name: 'Gestor.Inc', type: 'net', x: 100, y: 260 },
-  { id: 'readme_gest', name: 'Leeme', type: 'text', x: 180, y: 260 }
+  { id: 'readme_gest', name: 'Leeme', type: 'text', x: 180, y: 260 },
+  { id: 'vanguard', name: 'Vanguard', type: 'net', x: 260, y: 100 },
+  { id: 'readme_van', name: 'Leeme', type: 'text', x: 340, y: 100 }
 ];
 
 export default function App() {
@@ -865,6 +903,35 @@ export default function App() {
                ctx.beginPath(); ctx.ellipse(obj.rect.x + obj.rect.width/2 - 14, obj.rect.y + 12, 8, 14, 0.2, 0, Math.PI*2); ctx.fill();
                ctx.fillStyle = '#C84038'; // Red jacket
                ctx.beginPath(); ctx.ellipse(obj.rect.x + obj.rect.width/2 + 14, obj.rect.y + 20, 6, 12, -0.1, 0, Math.PI*2); ctx.fill();
+           } else if (obj.label === 'MESILLA') {
+               const mx = obj.rect.x;
+               const my = obj.rect.y;
+
+               // Nightstand Body
+               ctx.fillStyle = '#926337'; // Medium wood
+               ctx.fillRect(mx, my, obj.rect.width, obj.rect.height);
+               ctx.fillStyle = '#7C522A'; // Shadow edge
+               ctx.fillRect(mx, my + obj.rect.height - 4, obj.rect.width, 4);
+
+               // Drawer
+               ctx.fillStyle = '#A67C52';
+               ctx.fillRect(mx + 4, my + 10, obj.rect.width - 8, 14);
+               // Drawer handle
+               ctx.fillStyle = '#E3CFA9';
+               ctx.fillRect(mx + obj.rect.width / 2 - 4, my + 15, 8, 3);
+
+               // Phone (on top)
+               // Base
+               ctx.fillStyle = '#333'; // Dark casing
+               ctx.fillRect(mx + 10, my - 6, 20, 8);
+               // Handset
+               ctx.fillStyle = '#111';
+               ctx.fillRect(mx + 8, my - 10, 24, 5);
+               // Buttons grid mockup
+               ctx.fillStyle = '#666';
+               ctx.fillRect(mx + 13, my - 3, 2, 2);
+               ctx.fillRect(mx + 16, my - 3, 2, 2);
+               ctx.fillRect(mx + 19, my - 3, 2, 2);
            }
         }
       });
@@ -1285,7 +1352,7 @@ export default function App() {
     // Check App Icons
     for (const app of DESKTOP_APPS) {
        if (mx >= app.x - 10 && mx <= app.x + 55 && my >= app.y - 10 && my <= app.y + 70) {
-          if (['penalties', 'cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'gestor', 'readme_gest'].includes(app.id)) {
+          if (['penalties', 'cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'gestor', 'readme_gest', 'vanguard', 'readme_van'].includes(app.id)) {
              setOpenedApp(app.id);
              setIsMaximized(false); 
           }
@@ -1298,10 +1365,23 @@ export default function App() {
      if (app === 'logulia') return { title: 'Logulia', url: 'https://logulia-web-para-porfolio.vercel.app/', type: 'browser' };
      if (app === 'zaprado') return { title: 'Zaprado', url: 'https://zaprado-web-para-porfolio.vercel.app/', type: 'browser' };
      if (app === 'gestor') return { title: 'Gestor Incidencias', url: 'https://app-incidencias-theta.vercel.app/', type: 'browser' };
+     if (app === 'vanguard') return { title: 'Vanguard Web', url: 'https://vanguardweb-beta.vercel.app/', type: 'browser' };
      
      if (app === 'readme_zap') return { title: 'Leeme.txt', text: 'ZAPRADO - Sistema Gestor de Incidencias\n\nSolución avanzada para la administración y seguimiento de reportes post-venta. Permite centralizar la gestión de anomalías en productos, optimizar flujos logísticos de devolución y agilizar la resolución de conflictos en envíos, asegurando una experiencia de usuario de alta calidad y tiempos de respuesta mínimos.', type: 'text' };
      if (app === 'readme_log') return { title: 'Leeme.txt', text: 'LOGULIA - Control y Liquidación de Gastos Operativos\n\nHerramienta especializada en la monitorización y cálculo preciso del kilometraje/coste (km/€). Facilita el reporte de desplazamientos profesionales, optimiza el reembolso de gastos de transporte y garantiza un control financiero transparente y eficiente de la movilidad corporativa.', type: 'text' };
      if (app === 'readme_gest') return { title: 'Leeme.txt', text: 'GESTOR INCIDENCIAS ESPAÑA - Monitorización en Tiempo Real\n\nAplicación de visualización geográfica que permite localizar y hacer seguimiento de dónde saltan las incidencias a lo largo de España mediante un mapa interactivo. Ayuda a identificar zonas críticas y planificar respuestas efectivas de soporte a nivel nacional.', type: 'text' };
+      if (app === 'readme_van') return { 
+         title: 'Leeme.txt', 
+         text: (
+           <>
+             VANGUARD WEB - Proyecto Personal{"\n\n"}
+             Este es mi proyecto personal realizado en colaboración con Ivan Muñoz. Es una plataforma orientada al desarrollo web moderno y experimental.{"\n\n"}
+             Colaborador: Ivan Muñoz{"\n"}
+             CV de Ivan: <a href="https://ivanmunoz-cv.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://ivanmunoz-cv.vercel.app/</a>
+           </>
+         ), 
+         type: 'text' 
+      };
      
      if (app === 'penalties') return { title: 'Penaltis.exe', url: '', type: 'game' };
      return { title: 'Navegador Web', url: '', type: 'browser' };
@@ -1314,7 +1394,7 @@ export default function App() {
       <div className="relative border-y-[6px] lg:border-[6px] border-[#303030] bg-[#1e1e1e] shadow-[0_0_60px_rgba(0,0,0,0.8)] lg:rounded-sm w-full max-w-[800px] aspect-video flex-shrink-0">
         
         {/* Windows 95 Emulated Application Window Overlay */}
-        {openedApp && ['cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'penalties', 'gestor', 'readme_gest'].includes(openedApp) && (
+        {openedApp && ['cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'penalties', 'gestor', 'readme_gest', 'vanguard', 'readme_van'].includes(openedApp) && (
           <div className={`absolute ${isMaximized ? 'inset-0 mb-[35px]' : 'top-[5%] left-[5%] right-[5%] bottom-[10%]'} bg-[#C0C0C0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-[#000] flex flex-col z-50 shadow-[4px_4px_0_rgba(0,0,0,0.5)]`}>
              <div className="bg-[#000080] text-white flex justify-between p-1 items-center font-sans">
                 <div className="flex items-center gap-2 ml-1">
@@ -1370,7 +1450,7 @@ export default function App() {
                      title={getWindowData(openedApp).title}
                   />
                 ) : getWindowData(openedApp).type === 'text' ? (
-                  <div className="p-2 text-black bg-white w-full h-full font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                  <div className="p-2 text-black bg-white w-full h-full font-mono text-sm leading-relaxed whitespace-pre-wrap overflow-auto">
                     {getWindowData(openedApp).text}
                   </div>
                 ) : (
