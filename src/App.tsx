@@ -85,7 +85,19 @@ const INTERIOR_OBJECTS: InteractiveObject[] = [
     type: 'pc',
     label: 'PC',
     rect: { x: 185, y: 70, width: 38, height: 40 },
-    color: '#000'
+    color: '#000',
+    docContent: (
+      <div className="space-y-4 font-sans text-black p-4">
+        <h2 className="text-2xl font-bold border-b-2 border-black pb-2">MANUAL DE USUARIO - PC</h2>
+        <ul className="space-y-2 list-disc pl-5">
+           <li><strong>Abrir Apps:</strong> Acércate al PC e interactúa con [E] para abrir la interfaz. Haz clic en los iconos del escritorio.</li>
+           <li><strong>Maximizar/Minimizar:</strong> Usa los botones [❐] / [□] para ajustar la ventana de la aplicación.</li>
+           <li><strong>Cerrar Apps:</strong> Haz clic en el botón [X] de la esquina superior derecha de la ventana activa.</li>
+           <li><strong>Salir del PC:</strong> Presiona [ESC] o interactúa con [E] para volver a la habitación.</li>
+        </ul>
+        <p className="text-xs text-gray-600 mt-4 italic">Tip: Algunas apps son juegos, ¡pruébalos todos!</p>
+      </div>
+    )
   },
   {
     id: 'perchero',
@@ -245,8 +257,9 @@ const INTERIOR_OBJECTS: InteractiveObject[] = [
 
 const DESKTOP_APPS = [
   { id: 'pc', name: 'Mi PC', type: 'pc', x: 20, y: 20 },
-  { id: 'trash', name: 'Papelera', type: 'trash', x: 20, y: 100 },
-  { id: 'penalties', name: 'Penaltis', type: 'net', x: 20, y: 180 },
+  { id: 'readme_instr', name: 'Instrucciones', type: 'text', x: 20, y: 100 },
+  { id: 'trash', name: 'Papelera', type: 'trash', x: 20, y: 180 },
+  { id: 'penalties', name: 'Penaltis', type: 'net', x: 20, y: 260 },
   { id: 'cv', name: 'Mi CV', type: 'cv', x: 100, y: 20 },
   { id: 'logulia', name: 'Logulia', type: 'net', x: 100, y: 100 },
   { id: 'readme_log', name: 'Leeme', type: 'text', x: 180, y: 100 },
@@ -260,6 +273,8 @@ const DESKTOP_APPS = [
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // States
   const [currentMap, setCurrentMap] = useState<MapId>('EXTERIOR');
@@ -287,6 +302,26 @@ export default function App() {
   useEffect(() => {
     stateRef.current = { currentMap, activeDialog, activeDocument, isViewingPC, openedApp, interactedIds, interactionTarget };
   }, [currentMap, activeDialog, activeDocument, isViewingPC, openedApp, interactedIds, interactionTarget]);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
 
   const lastActionTime = useRef(0);
   const handleActionKey = (key: string) => {
@@ -1352,7 +1387,7 @@ export default function App() {
     // Check App Icons
     for (const app of DESKTOP_APPS) {
        if (mx >= app.x - 10 && mx <= app.x + 55 && my >= app.y - 10 && my <= app.y + 70) {
-          if (['penalties', 'cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'gestor', 'readme_gest', 'vanguard', 'readme_van'].includes(app.id)) {
+          if (['penalties', 'cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'gestor', 'readme_gest', 'vanguard', 'readme_van', 'readme_instr'].includes(app.id)) {
              setOpenedApp(app.id);
              setIsMaximized(false); 
           }
@@ -1384,17 +1419,37 @@ export default function App() {
       };
      
      if (app === 'penalties') return { title: 'Penaltis.exe', url: '', type: 'game' };
+     if (app === 'readme_instr') return { title: 'Instrucciones.txt', type: 'text', text: "MANUAL DE USO:\n\n1. Abrir: Clic iconos.\n2. Gestión: Usa [❐]/[□].\n3. Cerrar: [X].\n4. Salir: [ESC]/[E]." };
      return { title: 'Navegador Web', url: '', type: 'browser' };
+
   };
 
   return (
-    <div className="bg-[#1A1A1A] min-h-[100dvh] flex flex-col items-center justify-center font-mono text-white overflow-hidden p-0 lg:p-8 select-none">
+    <div className="bg-[#1A1A1A] min-h-[100dvh] flex flex-col items-center justify-center font-mono text-white overflow-hidden p-0 lg:p-8 select-none relative">
       
+      {/* Fullscreen Toggle Button */}
+      <button 
+        onClick={toggleFullscreen}
+        className="fixed top-4 right-4 z-[100] bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-full text-white transition-all active:scale-95 group hidden lg:flex"
+        title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+      >
+        {isFullscreen ? (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+        )}
+      </button>
+
       {/* Game Viewport Container */}
-      <div className="relative border-y-[6px] lg:border-[6px] border-[#303030] bg-[#1e1e1e] shadow-[0_0_60px_rgba(0,0,0,0.8)] lg:rounded-sm w-full max-w-[800px] aspect-video flex-shrink-0">
+      <div 
+        ref={containerRef} 
+        className={`relative border-[#303030] bg-[#1e1e1e] shadow-[0_0_60px_rgba(0,0,0,0.8)] lg:rounded-sm w-full flex-shrink-0 
+          ${isFullscreen ? 'w-screen h-screen border-0 max-w-none' : 'border-y-[6px] lg:border-[6px] max-w-[800px] aspect-video'}
+        `}
+      >
         
         {/* Windows 95 Emulated Application Window Overlay */}
-        {openedApp && ['cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'penalties', 'gestor', 'readme_gest', 'vanguard', 'readme_van'].includes(openedApp) && (
+        {openedApp && ['cv', 'logulia', 'zaprado', 'readme_zap', 'readme_log', 'penalties', 'gestor', 'readme_gest', 'vanguard', 'readme_van', 'readme_instr'].includes(openedApp) && (
           <div className={`absolute ${isMaximized ? 'inset-0 mb-[35px]' : 'top-[5%] left-[5%] right-[5%] bottom-[10%]'} bg-[#C0C0C0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-[#000] flex flex-col z-50 shadow-[4px_4px_0_rgba(0,0,0,0.5)]`}>
              <div className="bg-[#000080] text-white flex justify-between p-1 items-center font-sans">
                 <div className="flex items-center gap-2 ml-1">
@@ -1477,7 +1532,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute bottom-1/2 left-1/2 -translate-x-1/2 -translate-y-12 lg:translate-y-10 bg-white text-black px-6 py-2 font-bold text-sm border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-bounce z-20 whitespace-nowrap"
+              className="absolute bottom-1/2 left-1/2 -translate-x-1/2 -translate-y-12 lg:bottom-1/2 lg:translate-y-12 bg-white text-black px-6 py-2 font-bold text-sm border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-bounce z-20 whitespace-nowrap"
               style={{ fontFamily: '"Arial Black", sans-serif' }}
             >
               [E] {interactionTarget.type === 'door' ? 'ABRIR' : 'INTERACTUAR'}
@@ -1518,7 +1573,7 @@ export default function App() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-1/2 translate-y-24 lg:bottom-4 left-4 right-4 border-[6px] border-[#303030] bg-[#F8F8F8] p-6 h-32 rounded-lg shadow-xl z-40"
+              className="absolute bottom-6 left-4 right-4 lg:bottom-10 lg:left-8 lg:right-8 border-[6px] border-[#303030] bg-[#F8F8F8] p-6 h-32 rounded-lg shadow-xl z-40 translate-y-0"
             >
               <div className="text-[#303030] text-lg sm:text-xl leading-relaxed flex flex-col h-full justify-between">
                 <p>{activeDialog.obj.pages && activeDialog.obj.pages[activeDialog.page]}</p>
@@ -1575,6 +1630,12 @@ export default function App() {
 
             {/* Mobile Right Action Buttons */}
             <div className="flex gap-2 sm:gap-4 items-end pointer-events-auto ml-auto">
+                <button 
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all select-none mb-2"
+                  onPointerDown={(e) => { e.preventDefault(); toggleFullscreen(); }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+                </button>
                 <button 
                   className="w-12 h-12 sm:w-14 sm:h-14 bg-red-600/50 backdrop-blur-sm rounded-full border-b-2 border-red-900/50 active:border-b-0 active:translate-y-1 text-white font-bold text-[10px] sm:text-xs tracking-widest shadow-lg select-none flex items-center justify-center"
                   onPointerDown={(e) => { e.preventDefault(); handleActionKey('escape'); }}
